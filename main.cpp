@@ -114,12 +114,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
 	// キー入力結果を受け取る箱
-	char keys[256] = {0};
-	char preKeys[256] = {0};
+	char keys[256] = { 0 };
+	char preKeys[256] = { 0 };
 
 	float angle = 0.0f;
 	float angularVelocity = 3.14f; // 角速度
 	float radius = 0.8f; // 円運動の半径
+	bool isMoving = false; // 球体の動きフラグ
 
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
@@ -129,6 +130,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		0.05f,
 		WHITE
 	};
+
+
+
+	
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -143,18 +148,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
+		// ImGuiウィジェットを作成
+		ImGui::Begin("Control Panel");
+		ImGui::Checkbox("Move Sphere", &isMoving);
+		ImGui::End();
+
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, 1280.0f / 720.0f, 0.1f, 100.0f);
 		Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0.0f, 0.0f, 1280.0f, 720.0f, 0.0f, 1.0f);
 
-		// 角度を更新
-		angle += angularVelocity * (1.0f / 60.0f);
+		// 球体の動き更新
+		if (isMoving) {
+			// 角度を更新
+			angle += angularVelocity * (1.0f / 60.0f);
 
-		// 球体の位置を更新
-		sphere.center.x = radius * cosf(angle);
-		sphere.center.y = radius * sinf(angle);
+			// 球体の位置を更新
+			sphere.center.x = radius * cosf(angle);
+			sphere.center.y = radius * sinf(angle);
+		}
 
 		///
 		/// ↑更新処理ここまで
