@@ -50,7 +50,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 
 void DrawSphere(const Sphere& sphere, Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, int color)
 {
-	const uint32_t kSubdivisiont = 30;  // 分割数
+	const uint32_t kSubdivisiont = 10;  // 分割数
 
 	const float kLonEvery = 2.0f * float(M_PI) / kSubdivisiont;  // 経度分割1つ分の角度
 	const float kLatEvery = 2.0f * float(M_PI) / kSubdivisiont;  // 緯度分割1つ分の角度
@@ -117,9 +117,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	float vel = 3.14f;
 	float angle = 0.0f;
-	float time = 1.0f / 60.0f;
+	float angularVelocity = 3.14f; // 角速度
+	float radius = 0.8f; // 円運動の半径
+
+	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
+	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
+
+	Sphere sphere{
+		{ 0.8f,0.0f,0.0f },
+		0.05f,
+		WHITE
+	};
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -134,6 +143,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
+		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
+		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, 1280.0f / 720.0f, 0.1f, 100.0f);
+		Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+		Matrix4x4 viewportMatrix = MakeViewportMatrix(0.0f, 0.0f, 1280.0f, 720.0f, 0.0f, 1.0f);
+
+		// 角度を更新
+		angle += angularVelocity * (1.0f / 60.0f);
+
+		// 球体の位置を更新
+		sphere.center.x = radius * cosf(angle);
+		sphere.center.y = radius * sinf(angle);
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -141,6 +163,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
+
+		DrawGrid(viewProjectionMatrix, viewportMatrix);
+		DrawSphere(sphere, viewProjectionMatrix, viewportMatrix, sphere.color);
 
 		///
 		/// ↑描画処理ここまで
